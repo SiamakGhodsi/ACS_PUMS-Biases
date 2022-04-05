@@ -4,57 +4,7 @@ from sklearn.linear_model import LogisticRegression
 from sklearn.model_selection import train_test_split
 from sklearn.pipeline import make_pipeline
 from sklearn.preprocessing import StandardScaler
-import matplotlib.pyplot as plt
-from matplotlib.patches import Polygon
-import os
-import csv
-import pickle
-import itertools
-
-## function to sort tuples and list of lists by a specific column
-## here our list is has a key and a value column).
-def Sort(sub_list):
-    # reverse = None (Sorts in Ascending order)
-    # key is set to sort using second element of
-    # sublist lambda has been used
-    sub_list.sort(key=lambda x: x[1])
-    return sub_list
-
-results_path = "./results"
-if not os.path.exists(results_path):
-        os.makedirs(results_path)
-
-####### function to save variables using pickle
-def save_vars( *args):
-    with open(os.path.join(results_path, 'variables_n2.pkl'), 'wb') as f:  # Python 3: open(..., 'wb')
-        pickle.dump([args], f)
-
-def load_features(state):
-    horizon = '2019_1-Year.npy'  ## 2019 data as the latest data in the repo is used
-    dir = './features'  ## directory to load features from
-
-    str1 = state + '_features_' + horizon
-    str2 = state + '_group_' + horizon
-    str3 = state + '_labels_' + horizon
-    filename1 = os.path.join(dir, str1)
-    filename2 = os.path.join(dir, str2)
-    filename3 = os.path.join(dir, str3)
-
-    # load data/features, labels and protected group
-    features = np.load(filename1)
-    group = np.load(filename2)
-    labels = np.load(filename3)
-    return features, group, labels
-
-def get_list_val(stt,w,b,nw,acc,stt2='CA'):
-    w_dict = dict(w)
-    b_dict = dict(b)
-    nw_dict = dict(nw)
-    acc_dict = dict(acc)
-    if stt2 == 'CA':
-        return [w_dict[stt], b_dict[stt], nw_dict[stt], acc_dict[stt]]
-    else:
-        return [w_dict[stt], b_dict[stt], nw_dict[stt2], acc_dict[stt2]]
+from my_useful_funcs import *
 
 #--------------------------------------------------------------------------------------------------
 state_list= {'AL', 'AK', 'AZ', 'AR', 'CA', 'CO', 'CT', 'DE', 'FL', 'GA', 'HI',
@@ -178,91 +128,14 @@ diff_tpr_wn_us   = Sort(diff_tpr_wn_us)
 data = [list(dict(diff_tpr_wb_n2).values()), list(dict(diff_tpr_wb_us).values()),
         list(dict(diff_tpr_wn_n2).values()), list(dict(diff_tpr_wn_us).values())]
 
-fig, ax1 = plt.subplots(figsize=(10, 6))
-fig.canvas.manager.set_window_title('A Boxplot Example')
-fig.subplots_adjust(left=0.075, right=0.95, top=0.9, bottom=0.25)
-
-bp = ax1.boxplot(data, notch=0, sym='+', vert=1, whis=1.5)
-plt.setp(bp['boxes'], color='black')
-plt.setp(bp['whiskers'], color='black')
-plt.setp(bp['fliers'], color='red', marker='+')
-
-# Add a horizontal grid to the plot, but make it very light in color
-# so we can use it for reading data values but not be distracting
-ax1.yaxis.grid(True, linestyle='-', which='major', color='lightgrey',
-               alpha=0.5)
-
-ax1.set(
-    axisbelow=True,  # Hide the grid behind plot objects
-    title='Comparison of Black and non-White racial groups TPR difference with White groups \n'
-          'over each state when model being trained on every-state/all_the_US data',
-    xlabel=' ',
-    ylabel='Difference of TPR rates',
-)
-
-# Now fill the boxes with desired colors
-box_colors = ['darkkhaki', 'royalblue']
-num_boxes = len(data)
-medians = np.empty(num_boxes)
-for i in range(num_boxes):
-    box = bp['boxes'][i]
-    box_x = []
-    box_y = []
-    for j in range(5):
-        box_x.append(box.get_xdata()[j])
-        box_y.append(box.get_ydata()[j])
-    box_coords = np.column_stack([box_x, box_y])
-    # Alternate between Dark Khaki and Royal Blue
-    ax1.add_patch(Polygon(box_coords, facecolor=box_colors[i % 2]))
-    # Now draw the median lines back over what we just filled in
-    med = bp['medians'][i]
-    median_x = []
-    median_y = []
-    for j in range(2):
-        median_x.append(med.get_xdata()[j])
-        median_y.append(med.get_ydata()[j])
-        ax1.plot(median_x, median_y, 'k')
-    medians[i] = median_y[0]
-    # Finally, overplot the sample averages, with horizontal alignment
-    # in the center of each box
-    ax1.plot(np.average(med.get_xdata()), np.average(data[i]),
-             color='w', marker='*', markeredgecolor='k')
-
-# Set the axes ranges and axes labels
-ax1.set_xlim(0.5, num_boxes + 0.5)
-top = max(list(itertools.chain(*data)))+ 0.05
-bottom = 0
-# to avoid *, also can use list(itertools.chain.from_iterable(data))
-ax1.set_ylim(bottom, top)
+title='Comparison of Black and non-White racial groups TPR difference with White groups \n' \
+          'over each state when model being trained on every-state/all_the_US data'
+xlabel=' '
+ylabel='Difference of TPR rates'
 differences = ['N2 models W-B','US model W-B', 'N2 models W-nW', 'US model W-nW']
-#ax1.set_xticklabels(np.repeat(differences, 2), rotation=45, fontsize=8)
-ax1.set_xticklabels(differences, rotation=45, fontsize=8)
+leg1='N-Model trains N2 tests'
+leg2= 'Model trained on US'
+limit = max(list(itertools.chain(*data)))+ 0.05
+name = 'bp_n2'
 
-# Due to the Y-axis scale being different across samples, it can be
-# hard to compare differences in medians across the samples. Add upper
-# X-axis tick labels with the sample medians to aid in comparison
-# (just use two decimal places of precision)
-pos = np.arange(num_boxes) + 1
-upper_labels = [str(round(s, 3)) for s in medians]
-weights = ['bold', 'semibold']
-for tick, label in zip(range(num_boxes), ax1.get_xticklabels()):
-    k = tick % 2
-    ax1.text(pos[tick], .95, upper_labels[tick],
-             transform=ax1.get_xaxis_transform(),
-             horizontalalignment='center', size='x-small',
-             weight=weights[k], color=box_colors[k])
-
-# Finally, add a basic legend
-fig.text(0.475, 0.08, 'N-Model trains N2 tests',
-         backgroundcolor=box_colors[0], color='black', weight='roman',
-         size='x-small')
-fig.text(0.475, 0.045, 'Model trained on US',
-         backgroundcolor=box_colors[1],
-         color='white', weight='roman', size='x-small')
-fig.text(0.475, 0.010, '*', color='white', backgroundcolor='silver',
-         weight='roman', size='medium')
-fig.text(0.49, 0.012, ' Average Value', color='black', weight='roman',
-         size='x-small')
-
-plt.tight_layout()
-plt.savefig(results_path + '//' + 'bpn2.svg', format='svg')
+produce_bp(data, title, xlabel, ylabel, differences, leg1, leg2, name, limit)
