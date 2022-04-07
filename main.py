@@ -6,43 +6,6 @@ from sklearn.pipeline import make_pipeline
 from sklearn.preprocessing import StandardScaler
 
 data_source = ACSDataSource(survey_year='2019', horizon='1-Year', survey='person')
-# acs_data = data_source.get_data(states=["CA"], download=True)
-# features, label, group = ACSEmployment.df_to_numpy(acs_data)
-#
-#
-# X_train, X_test, y_train, y_test, group_train, group_test = train_test_split(
-#     features, label, group, test_size=0.2, random_state=0)
-#
-# ###### Your favorite learning algorithm here #####
-# model = make_pipeline(StandardScaler(), LogisticRegression())
-# model.fit(X_train, y_train)
-#
-# yhat = model.predict(X_test)
-#
-# white_tpr = np.mean(yhat[(y_test == 1) & (group_test == 1)])
-# black_tpr = np.mean(yhat[(y_test == 1) & (group_test == 2)])
-#
-# # Equality of opportunity violation: 0.0455
-# white_tpr - black_tpr
-
-
-# acs_tx = data_source.get_data(states=["CT"], download=True)
-# tx_features, tx_label, tx_group = ACSEmployment.df_to_numpy(acs_tx)
-#
-# features, label, group = ACSEmployment.df_to_numpy(acs_tx)
-# X_train, X_test, y_train, y_test, group_train, group_test = train_test_split(
-#     tx_features, tx_label, tx_group, test_size=0.2, random_state=0)
-#
-# model = make_pipeline(StandardScaler(), LogisticRegression())
-# model.fit(X_train, y_train)
-#
-# yhat = model.predict(X_test)
-# white_tpr = np.mean(yhat[(y_test == 1) & (group_test == 1)])
-# black_tpr = np.mean(yhat[(y_test == 1) & (group_test == 2)])
-#
-# # Equality of opportunity violation: 0.0397
-# white_tpr - black_tpr
-
 
 from folktables import ACSDataSource, ACSIncome
 
@@ -89,4 +52,32 @@ non_white_tpr = np.mean(yhat[(y_test_ca == 1) & (group_test_ca != 1)])
 print('\naccuracy: model trained and tested on CA:' + str(s2))
 print('also TPR of SD for 3 groups: \n\t1-white group: '+ str(white_tpr)+'\n\t2-black_group: '
       + str(black_tpr)+ '\n\t3-all non whites:'+ str(non_white_tpr))
+
+
+
+########################### Time shift
+
+
+from folktables import ACSDataSource, ACSPublicCoverage
+from sklearn.linear_model import LogisticRegression
+
+# Download 2014 data
+data_source = ACSDataSource(survey_year=2014, horizon='1-Year', survey='person')
+acs_data14 = data_source.get_data(states=["CA"], download=True)
+features14, labels14, _ = ACSPublicCoverage.df_to_numpy(acs_data14)
+
+# Train model on 2014 data
+# Plug-in your method for tabular datasets
+model = LogisticRegression()
+model.fit(features14, labels14)
+
+# Evaluate model on 2015-2018 data
+accuracies = []
+for year in [2015, 2016, 2017, 2018]:
+    data_source = ACSDataSource(survey_year=year, horizon='1-Year', survey='person')
+    acs_data = data_source.get_data(states=["CA"], download=True)
+    features, labels, _ = ACSPublicCoverage.df_to_numpy(acs_data)
+    accuracies.append(model.score(features, labels))
+
+
 

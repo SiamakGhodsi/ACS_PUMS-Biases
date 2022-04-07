@@ -64,7 +64,7 @@ def bar_plot(CA_vals,stt_vals, states):
 
         # create the bars
         plt.barh(y_pos, scores, height=bar_width, color='green', label='Ca-state')
-        plt.barh(y_pos + 0.25, scores2, height=bar_width, color='b', label=states[1]+'-state')
+        plt.barh(y_pos + 0.25, scores2, height=bar_width, color='tab:red', label=states[1]+'-state')
 
         # Put names in the middle of each group-bar
         ax.set_yticks(y_pos + bar_width / 2)
