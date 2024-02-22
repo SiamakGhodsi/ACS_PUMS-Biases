@@ -1,9 +1,9 @@
 # Context matters for fairness
 This repository contains the experimental results presented in our paper entitled 
 ## ["Context matters for fairness -- a case study on the effect of spatial distribution shifts"](https://arxiv.org/abs/2206.11436)
+Refer to the "ACS_analysis.ipynb" notebook for visualizations.
 
-![2](https://github.com/SiamakGhodsi/new_Adult/assets/56566139/a2eccab3-0ff5-41e6-844b-e9988786efa6)
-
+[local_heatmap.pdf](https://github.com/SiamakGhodsi/new_Adult/files/14374729/local_heatmap.pdf)
 
 If you use our material, or refer to our paper, please cite us: 
 
